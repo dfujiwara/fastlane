@@ -9,16 +9,17 @@ module PEM
         FastlaneCore::PrintTable.print_values(config: PEM.config, hide_keys: [:new_profile], title: "Summary for PEM #{Fastlane::VERSION}")
         login
 
-        existing_certificate = certificate.all.detect do |c|
+        existing_certificates = certificate.all.select do |c|
           c.owner_name == PEM.config[:app_identifier]
         end
 
-        if existing_certificate
+        existing_certificates.each do |existing_certificate|
           remaining_days = (existing_certificate.expires - Time.now) / 60 / 60 / 24
           UI.message "Existing push notification profile for '#{existing_certificate.owner_name}' is valid for #{remaining_days.round} more days."
           if remaining_days > 30
             if PEM.config[:force]
               UI.success "You already have an existing push certificate, but a new one will be created since the --force option has been set."
+              break
             else
               UI.success "You already have a push certificate, which is active for more than 30 more days. No need to create a new one"
               UI.success "If you still want to create a new one, use the --force option when running PEM."
